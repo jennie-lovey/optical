@@ -1,5 +1,6 @@
 /* Everything below the hero sits on white. */
 .page {
+  background: #fff;
   --paper: #ffffff;
   --ink: #1b1d19;
   --ink-2: #5d6159;

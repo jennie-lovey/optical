@@ -19,9 +19,12 @@
 /* overflow-x: clip keeps the butterfly's off-screen flight (and anything else) from
    widening the page, without breaking sticky positioning the way hidden would. */
 html, body { margin: 0; overflow-x: clip; }
+/* Safari paints the phone's status bar (and any pull-down overscroll) with the page
+   background, so the page is the hero's sage; the sections below lay white over it. */
+html { background: #8a9c82; }
 
 body {
-  background: #fff;
+  background: #8a9c82;
   color: var(--cream);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
@@ -263,7 +266,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 28px var(--gutter) 0;
+  padding: max(28px, calc(env(safe-area-inset-top) + 12px)) var(--gutter) 0;
   padding-left: var(--gutter);
   padding-right: clamp(16px, 6.3vw, 105px);
 }
@@ -527,7 +530,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
    so the stack always fits between the nav and the tagline. */
 @media (max-width: 760px), (max-aspect-ratio: 5/4) {
   .hero { --u: min(1vw, 0.462svh); min-height: max(100svh, 640px); }
-  .nav { padding-top: 18px; }
+  .nav { padding-top: max(18px, calc(env(safe-area-inset-top) + 8px)); }
   .nav__cart, .nav .btn { display: none; }
   .nav__menu { display: grid; }
 

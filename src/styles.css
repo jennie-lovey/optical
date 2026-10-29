@@ -1,4 +1,5 @@
 :root {
+  --sky: #98a38b; /* the top of the hero photo; also the phone status bar */
   --sage-1: #8c9f86;
   --sage-2: #a3b39a;
   --sage-3: #6f8467;
@@ -21,10 +22,10 @@
 html, body { margin: 0; overflow-x: clip; }
 /* Safari paints the phone's status bar (and any pull-down overscroll) with the page
    background, so the page is the hero's sage; the sections below lay white over it. */
-html { background: #8a9c82; }
+html { background: var(--sky); }
 
 body {
-  background: #8a9c82;
+  background: var(--sky);
   color: var(--cream);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
@@ -43,6 +44,15 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   min-height: max(100svh, 620px);
   overflow: hidden;
   isolation: isolate;
+}
+/* The top of the hero melts into the status-bar colour, so the bar reads as part of it. */
+.hero::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0;
+  height: calc(env(safe-area-inset-top) + 70px);
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--sky), transparent);
 }
 
 .hero__media { position: absolute; inset: 0; z-index: -2; }

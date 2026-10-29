@@ -523,6 +523,7 @@
 /* ---------- Community (dark split) ---------- */
 
 .community {
+  --side: clamp(16px, 5vw, 80px);
   margin-top: clamp(80px, 10vw, 160px);
   display: grid;
   grid-template-columns: 1.1fr 1fr;
@@ -628,8 +629,14 @@
   .journal__grid { grid-template-columns: 1fr; }
   .stores__inner { grid-template-columns: 1fr; }
   .promises__grid { grid-template-columns: 1fr 1fr; row-gap: 40px; }
-  .community { grid-template-columns: 1fr; }
-  .community__photo { height: 70vw; }
+  /* Phones and portrait tablets: the photo sits right under the headline, full width
+     and tall, with the form and links after it. */
+  .community { display: flex; flex-direction: column; }
+  .community__copy { display: contents; }
+  .community__kicker { order: 1; padding: 48px var(--side) 0; }
+  .community__title { order: 2; padding: 16px var(--side) 0; }
+  .community__photo { order: 3; height: min(118vw, 640px); min-height: 0; margin-top: 32px; }
+  .community__row { order: 4; padding: 40px var(--side) 56px; }
   .footer__top { grid-template-columns: 1fr 1fr; }
   .footer__tag { grid-column: 1 / -1; }
 }

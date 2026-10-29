@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import Butterfly from "./Butterfly.jsx";
 import Face from "./Face.jsx";
 import Sections from "./sections/Sections.jsx";
@@ -220,6 +220,14 @@ const POLLEN = Array.from({ length: 14 }, (_, i) => ({
   delay: -((i * 3.7) % 14),
 }));
 
+/** A few petals drifting down across the garden once it has bloomed. */
+const PETALS = Array.from({ length: 9 }, (_, i) => ({
+  top: `${-6 + ((i * 17) % 40)}%`,
+  size: 9 + ((i * 5) % 7),
+  dur: 16 + ((i * 7) % 9),
+  delay: 3.4 + i * 1.9,
+}));
+
 export default function App() {
   const reduced = useReducedMotion();
   const { ready, progress } = useAssetsReady(PRELOAD);
@@ -247,8 +255,20 @@ export default function App() {
   }, [faceOn, reduced]);
   const { selected, pick, cycling, cycleKey, setPaused } = useFrameCycle(FRAMES.length, entered);
 
+  // Blossom: the garden grows up out of the horizon along a soft edge. --grow is how far
+  // up (in % of the hero, from the bottom) the moss and flowers have risen.
+  const grow = useMotionValue(reduced ? 120 : 0);
+  const growVar = useTransform(grow, (v) => `${v}%`);
+  useEffect(() => {
+    if (!open || reduced) return undefined;
+    // Starts as the lids finish parting, so the rise is seen rather than hidden behind them.
+    const c = animate(grow, 120, { duration: 3.2, delay: 0.85, ease: [0.33, 0, 0.2, 1] });
+    return () => c.stop();
+  }, [open, reduced, grow]);
+
   // The photo and its foliage cut-out always move together, so their edges stay matched.
   const wake = {
+    style: { "--grow": growVar },
     initial: reduced ? false : { scale: 1.1, y: "3%" },
     animate: open ? { scale: 1, y: "0%" } : undefined,
     transition: { ...OPEN.wake, ease: EASE_OUT },
@@ -279,6 +299,13 @@ export default function App() {
           animate={open ? { opacity: 1 } : undefined}
           transition={{ duration: 2.4, delay: 1, ease: "easeOut" }}
         />
+        {!reduced && (
+          <div className="petals">
+            {PETALS.map((p, i) => (
+              <span key={i} style={{ top: p.top, width: p.size, height: p.size * 0.62, animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s` }} />
+            ))}
+          </div>
+        )}
         {!reduced && (
           <div className="pollen">
             {POLLEN.map((p, i) => (

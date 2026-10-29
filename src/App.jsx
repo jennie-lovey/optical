@@ -147,6 +147,8 @@ export default function App() {
   const { ready, progress } = useAssetsReady(PRELOAD);
   const heroRef = useRef(null);
   const look = useGardenLook(heroRef, reduced);
+  // Shared by both garden layers so the pan and the focus lens line up exactly.
+  const lookStyle = { x: look.panX, y: look.panY, "--lx": look.lensX, "--ly": look.lensY, "--lr": look.lensSize, "--soft": look.softness };
 
   // loading → open (lids part, garden wakes) → face (entrance plays) → entered (idle)
   const [minHeld, setMinHeld] = useState(false);
@@ -197,16 +199,19 @@ export default function App() {
       <div className="hero__media" aria-hidden="true">
         <motion.div className="garden" {...wake}>
           <div className="garden__drift">
-            <motion.div className="garden__look" style={{ x: look.panX, y: look.panY }}>
-            <motion.img
-              className="hero__photo"
-              src="/assets/hero.webp"
-              alt=""
-              fetchpriority="high"
-              initial={reduced ? false : { filter: "blur(12px) brightness(0.8)" }}
-              animate={open ? { filter: "blur(0px) brightness(1)" } : undefined}
-              transition={{ duration: 1.8, delay: 0.15, ease: EASE_OUT }}
-            />
+            <motion.div className="garden__look" style={lookStyle}>
+              <div className="garden__base">
+                <motion.img
+                  className="hero__photo"
+                  src="/assets/hero.webp"
+                  alt=""
+                  fetchpriority="high"
+                  initial={reduced ? false : { filter: "blur(12px) brightness(0.8)" }}
+                  animate={open ? { filter: "blur(0px) brightness(1)" } : undefined}
+                  transition={{ duration: 1.8, delay: 0.15, ease: EASE_OUT }}
+                />
+              </div>
+              {!reduced && <img className="hero__photo garden__lens" src="/assets/hero.webp" alt="" />}
             </motion.div>
           </div>
         </motion.div>
@@ -242,15 +247,18 @@ export default function App() {
       )}
       <motion.div className="garden garden--front" aria-hidden="true" {...wake}>
         <div className="garden__drift">
-          <motion.div className="garden__look" style={{ x: look.panX, y: look.panY }}>
-          <motion.img
-            className="hero__front"
-            src="/assets/hero-front.webp"
-            alt=""
-            initial={reduced ? false : { opacity: 0 }}
-            animate={open ? { opacity: 1 } : undefined}
-            transition={{ duration: 1.2, delay: 0.25, ease: "easeOut" }}
-          />
+          <motion.div className="garden__look" style={lookStyle}>
+            <div className="garden__base">
+              <motion.img
+                className="hero__front"
+                src="/assets/hero-front.webp"
+                alt=""
+                initial={reduced ? false : { opacity: 0 }}
+                animate={open ? { opacity: 1 } : undefined}
+                transition={{ duration: 1.2, delay: 0.25, ease: "easeOut" }}
+              />
+            </div>
+            {!reduced && <img className="hero__front garden__lens" src="/assets/hero-front.webp" alt="" />}
           </motion.div>
         </div>
       </motion.div>

@@ -626,51 +626,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .bf__flap { animation: none !important; }
 }
 
-/* ---------- Sun cursor ---------- */
-
-/* Mouse and trackpad only: over the hero the arrow becomes a small sun. Links and buttons
-   keep the normal pointer (the sun steps aside there). */
+/* Mouse and trackpad: the butterfly is the cursor over the hero; links and buttons keep
+   the normal pointer. */
 @media (hover: hover) and (pointer: fine) {
-  .hero.has-sun { cursor: none; }
-  .hero.has-sun :is(a, button, input, label) { cursor: pointer; }
-}
-.sun {
-  position: fixed; top: 0; left: 0;
-  width: 0; height: 0;
-  z-index: 200;
-  pointer-events: none;
-  will-change: transform;
-}
-.sun > span {
-  position: absolute; left: 0; top: 0;
-  border-radius: 50%;
-  translate: -50% -50%;
-  opacity: 0;
-  scale: 0.6;
-  transition: opacity 0.25s ease-out, scale 0.35s cubic-bezier(0.2, 0, 0, 1);
-}
-.sun[data-on="true"] > span { opacity: 1; scale: 1; }
-.sun[data-press="true"] > span { scale: 0.82; }
-.sun__core {
-  width: 28px; height: 28px;
-  background: radial-gradient(circle, #fffbea 0 30%, #ffe29a 58%, #ffc46b 100%);
-  box-shadow: 0 0 10px 2px rgba(255, 214, 130, 0.85), 0 0 24px 6px rgba(255, 200, 110, 0.45);
-}
-.sun__halo {
-  width: 124px; height: 124px;
-  background: radial-gradient(circle, rgba(255, 232, 170, 0.5), rgba(255, 220, 150, 0.12) 45%, transparent 70%);
-  mix-blend-mode: screen;
-}
-/* Faint rays turning slowly around the core. */
-.sun__rays {
-  width: 82px; height: 82px;
-  background: repeating-conic-gradient(from 0deg, rgba(255, 236, 180, 0.55) 0deg 4deg, transparent 4deg 30deg);
-  -webkit-mask-image: radial-gradient(circle, transparent 30%, #000 42%, transparent 72%);
-          mask-image: radial-gradient(circle, transparent 30%, #000 42%, transparent 72%);
-  mix-blend-mode: screen;
-  animation: sun-turn 22s linear infinite;
-}
-@keyframes sun-turn { to { rotate: 360deg; } }
-@media (prefers-reduced-motion: reduce) {
-  .sun__rays { animation: none; }
+  .hero.has-bf { cursor: none; }
+  .hero.has-bf :is(a, button, input, label) { cursor: pointer; }
 }

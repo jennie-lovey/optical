@@ -46,8 +46,9 @@ function toPage(p, w, h) {
 
 /**
  * A butterfly that flies across the splash, leads the eyelids open, then lives in the
- * garden: it lands on a flower, lifts off when the cursor (or a tap) comes close, and
- * now and then moves to another flower on its own.
+ * garden. With a mouse or trackpad it is the cursor over the hero: it follows the pointer
+ * and flies back to a flower when the pointer leaves. On touch it rests on a flower, lifts
+ * off when tapped near, and now and then moves to another flower on its own.
  */
 export default function Butterfly({ open, reduced, heroRef }) {
   const x = useMotionValue(-400);
@@ -56,6 +57,8 @@ export default function Butterfly({ open, reduced, heroRef }) {
   const [mode, setMode] = useState("fly"); // "fly" flaps fast, "rest" slow and lazy
   const at = useRef(0);
   const busy = useRef(false);
+  const following = useRef(false);
+  const el = useRef(null);
   const openRef = useRef(open);
   openRef.current = open;
 
@@ -103,7 +106,10 @@ export default function Butterfly({ open, reduced, heroRef }) {
     };
 
     // Flight along a soft arc with a gentle up-and-down flutter, facing where it goes.
+    let flight = [];
+    const stopFlight = () => { flight.forEach((c) => c.stop()); flight = []; };
     const flyTo = async (to, { lift = 0.12, dur } = {}) => {
+      stopFlight();
       busy.current = true;
       setMode("fly");
       const from = { x: x.get(), y: y.get() };
@@ -115,8 +121,9 @@ export default function Butterfly({ open, reduced, heroRef }) {
       const xs = [from.x, from.x + (to.x - from.x) * 0.3, from.x + (to.x - from.x) * 0.55, from.x + (to.x - from.x) * 0.8, to.x];
       const ys = [from.y, peak + h * 0.03, peak, peak + (to.y - peak) * 0.45, to.y];
       const ease = "easeInOut";
-      await Promise.all([animate(x, xs, { duration: d, ease }), animate(y, ys, { duration: d, ease })]);
-      if (!alive) return;
+      flight = [animate(x, xs, { duration: d, ease }), animate(y, ys, { duration: d, ease })];
+      await Promise.all(flight);
+      if (!alive || following.current) return;
       setMode("rest");
       busy.current = false;
     };
@@ -139,6 +146,7 @@ export default function Butterfly({ open, reduced, heroRef }) {
       return undefined;
     }
 
+    let introDone = false;
     (async () => {
       // Splash: in from the lower left, past the wordmark, reaching the middle as the lids part.
       const { w, h } = size();
@@ -152,11 +160,12 @@ export default function Butterfly({ open, reduced, heroRef }) {
       while (alive && !openRef.current) await wait(0.1);
       // Garden: a little loop over the scene while it wakes, then down onto a flower.
       if (alive) await flyTo({ x: 0.7 * w, y: 0.3 * h }, { lift: 0.06, dur: 1.4 });
-      if (alive) await land(usable()[0]);
-      // Now and then it moves on by itself.
+      if (alive && !following.current) await land(usable()[0]);
+      introDone = true;
+      // Now and then it moves on by itself (not while it is being the cursor).
       while (alive) {
         await wait(rand(9, 15));
-        if (alive && !busy.current) await land(otherSpot());
+        if (alive && !busy.current && !following.current) await land(otherSpot());
       }
     })();
 
@@ -167,13 +176,48 @@ export default function Butterfly({ open, reduced, heroRef }) {
       const p = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       return Math.hypot(p.x - x.get(), p.y - y.get()) < r ? p : null;
     };
+    // Mouse and trackpad: it is the cursor. The pointer sits at the middle of its wings.
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (finePointer) heroRef.current?.classList.add("has-bf");
+    let follow = [];
+    let idleId = null;
+    let lastX = 0;
     const onMove = (e) => {
-      if (busy.current || e.pointerType === "touch") return;
-      const p = near(e, 120);
-      if (p) land(otherSpot(p));
+      if (!finePointer || e.pointerType === "touch" || !introDone) return;
+      const rect = heroRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (!inside) {
+        if (following.current) {
+          following.current = false;
+          follow.forEach((c) => c.stop());
+          busy.current = false;
+          const here = { x: x.get(), y: y.get() };
+          const pool = usable();
+          const nearest = pool.sort((a, b) => Math.hypot(spot(a).x - here.x, spot(a).y - here.y) - Math.hypot(spot(b).x - here.x, spot(b).y - here.y))[0];
+          land(nearest);
+        }
+        return;
+      }
+      if (!following.current) {
+        following.current = true;
+        busy.current = true;
+        stopFlight();
+      }
+      setMode("fly");
+      const bw = el.current?.offsetWidth || 60;
+      const tx = e.clientX - rect.left + bw * 0.1;
+      const ty = e.clientY - rect.top + bw * 1.19 * 0.46;
+      if (Math.abs(tx - lastX) > 3) setFacing(tx >= lastX ? 1 : -1);
+      lastX = tx;
+      follow.forEach((c) => c.stop());
+      const spring = { type: "spring", stiffness: 170, damping: 20, mass: 0.6 };
+      follow = [animate(x, tx, spring), animate(y, ty, spring)];
+      clearTimeout(idleId);
+      idleId = setTimeout(() => following.current && setMode("rest"), 650);
     };
     const onDown = (e) => {
-      if (busy.current) return;
+      if (busy.current || following.current) return;
       const p = near(e, 150);
       if (p) land(otherSpot(p));
     };
@@ -189,6 +233,9 @@ export default function Butterfly({ open, reduced, heroRef }) {
 
     return () => {
       alive = false;
+      stopFlight();
+      clearTimeout(idleId);
+      heroRef.current?.classList.remove("has-bf");
       timers.forEach(clearTimeout);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
@@ -198,7 +245,7 @@ export default function Butterfly({ open, reduced, heroRef }) {
 
   return (
     <div className="bf-layer" aria-hidden="true">
-      <motion.div className="bf" data-mode={mode} style={{ x, y }}>
+      <motion.div className="bf" ref={el} data-mode={mode} style={{ x, y }}>
         <div className="bf__face" style={{ "--facing": facing }}>
           {/* Wings fold about the line of the body: tilt so the body is level, flap, tilt back. */}
           <div className="bf__tilt">

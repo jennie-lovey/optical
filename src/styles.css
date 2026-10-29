@@ -16,7 +16,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html, body { margin: 0; }
+/* overflow-x: clip keeps the butterfly's off-screen flight (and anything else) from
+   widening the page, without breaking sticky positioning the way hidden would. */
+html, body { margin: 0; overflow-x: clip; }
 
 body {
   background: #fff;
@@ -636,10 +638,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .frame { flex: 0 0 31%; height: 60px; scroll-snap-align: start; }
 }
 
-/* Portrait tablets: keep SEE DIFFERENTLY on one line, as on desktop, across the full
-   width; the face sits just below with DIFFERENTLY running behind the brows. The group
-   (about 46vw tall) is centred in the space between the nav and the tagline. */
-@media (min-width: 600px) and (max-aspect-ratio: 5/4) {
+/* Phones and portrait tablets: keep SEE DIFFERENTLY on one line, as on desktop, across
+   the full width; the face sits just below with DIFFERENTLY running behind the brows. The
+   group (about 46vw tall) is centred in the space between the nav and the tagline. */
+@media (max-width: 760px), (max-aspect-ratio: 5/4) {
   .hero { --hl-top: max(110px, calc(50svh - 40px - 24vw)); }
   .headline__word--see {
     left: 4vw; top: var(--hl-top);
@@ -655,6 +657,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   }
   .rig { top: calc(var(--hl-top) + 11.8vw); width: 70vw; translate: -50% 0; }
 }
+/* Phones: a larger face under the one-line headline, the group centred above the
+   tagline panel and picker at the bottom. */
+@media (max-width: 599px) {
+  .hero { --hl-top: max(96px, calc(50svh - 200px)); }
+  .rig { width: 88vw; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; }
@@ -664,7 +672,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* A zero-height layer at the top of the page: the butterfly's x/y are hero pixels, it
    scrolls with the hero, and it sits above the splash so it can cross it. */
-.bf-layer { position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: 101; pointer-events: none; }
+/* Clipped to the hero's area so a flight past the screen edge never widens the page. */
+.bf-layer { position: absolute; top: 0; left: 0; width: 100%; height: max(100svh, 720px); overflow: clip; z-index: 101; pointer-events: none; }
 .bf { position: absolute; top: 0; left: 0; width: clamp(38px, 4.2vw, 72px); will-change: transform; }
 /* Feet sit on the point; scaleX turns it to face where it flies. */
 .bf__face {

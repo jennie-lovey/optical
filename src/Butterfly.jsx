@@ -22,6 +22,14 @@ const FLOWERS = [
   { x: 1532, y: 640 }, // white daisy, right, under the tagline
 ];
 
+// Where flowers run short (phones show only the middle of the photo, and the tagline panel
+// covers its flowers), it can also perch on the top edge of the frosted panels.
+const PERCHES = [
+  { sel: ".pitch", fx: 0.22 },
+  { sel: ".pitch", fx: 0.62 },
+  { sel: ".picker", fx: 0.5 },
+];
+
 const rand = (a, b) => a + Math.random() * (b - a);
 
 /** Hero photo pixels → page pixels, matching object-fit: cover with position 50% 100%. */
@@ -52,7 +60,16 @@ export default function Butterfly({ open, reduced, heroRef }) {
     const timers = new Set();
     const wait = (s) => new Promise((r) => { const id = setTimeout(r, s * 1000); timers.add(id); });
     const size = () => ({ w: window.innerWidth, h: heroRef.current?.offsetHeight || window.innerHeight });
-    const spot = (i) => { const { w, h } = size(); return toPage(FLOWERS[i], w, h); };
+    // Spots 0..n-1 are flowers; the rest are perches on panel edges, read from the page.
+    const spot = (i) => {
+      const { w, h } = size();
+      if (i < FLOWERS.length) return toPage(FLOWERS[i], w, h);
+      const perch = PERCHES[i - FLOWERS.length];
+      const hero = heroRef.current?.getBoundingClientRect();
+      const r = heroRef.current?.querySelector(perch.sel)?.getBoundingClientRect();
+      if (!r || !hero) return { x: -999, y: -999 };
+      return { x: r.left - hero.left + r.width * perch.fx, y: r.top - hero.top + 2 };
+    };
     // Flowers on screen and clear of the face, the tagline panel, the picker and the nav.
     const usable = () => {
       const { w, h } = size();
@@ -72,12 +89,13 @@ export default function Butterfly({ open, reduced, heroRef }) {
         return !keepOut.some((k) => p.x > k.l && p.x < k.r && p.y > k.t && p.y < k.b);
       });
       if (ok.length >= 3) return ok;
-      // Crowded layouts: allow any on-screen flower below the face rather than staying put.
-      const loose = FLOWERS.map((_, i) => i).filter((i) => {
+      // Too few flowers in view: add the panel-edge perches that are on screen.
+      const perches = PERCHES.map((_, j) => FLOWERS.length + j).filter((i) => {
         const p = spot(i);
-        return p.x > w * 0.04 && p.x < w * 0.96 && p.y > h * 0.45 && p.y < h * 0.86;
+        return p.x > w * 0.04 && p.x < w * 0.96 && p.y > h * 0.3 && p.y < h * 0.98;
       });
-      return loose.length ? loose : [FLOWERS.findIndex((_, i) => spot(i).x > w * 0.05)];
+      const all = [...ok, ...perches];
+      return all.length ? all : [0];
     };
 
     // Flight along a soft arc with a gentle up-and-down flutter, facing where it goes.

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Face from "./Face.jsx";
 import Sections from "./sections/Sections.jsx";
-import { CYCLE, EASE_OUT, FRAMES, PRELOAD, T, frameSrc } from "./data.js";
+import { CYCLE, EASE_OUT, FRAMES, OPEN, PRELOAD, T, frameSrc } from "./data.js";
 
 const fadeIn = (reduced, timing, y = 12) => ({
   initial: reduced ? false : { opacity: 0, y },
@@ -139,18 +139,23 @@ function Picker({ selected, onSelect, reduced, cycling, cycleKey, onPause }) {
 /** Waits until every layer is decoded so the entrance plays from its first frame. */
 function useAssetsReady(urls) {
   const [ready, setReady] = useState(false);
+  const [progress, setProgress] = useState(0);
   useEffect(() => {
     let live = true;
+    let done = 0;
     const loads = urls.map((src) => {
       const img = new Image();
       img.src = src;
-      return img.decode().catch(() => {});
+      return img.decode().catch(() => {}).then(() => {
+        done += 1;
+        if (live) setProgress(done / urls.length);
+      });
     });
     const fallback = new Promise((r) => setTimeout(r, 6000));
     Promise.race([Promise.all(loads), fallback]).then(() => live && setReady(true));
     return () => { live = false; };
   }, [urls]);
-  return ready;
+  return { ready, progress };
 }
 
 /** Steps through the frames on its own once the entrance is done; picking one restarts the wait. */
@@ -174,35 +179,132 @@ function useFrameCycle(count, started) {
   return { selected, pick, cycling, cycleKey, setPaused };
 }
 
+/**
+ * Opening screen: the wordmark over a sage field with a line that fills as the page
+ * loads, then the field parts like eyelids to reveal the garden.
+ */
+function Splash({ progress, open, onGone }) {
+  return (
+    <div className="splash" data-open={open} aria-hidden={open || undefined}>
+      <motion.div
+        className="splash__lid splash__lid--top"
+        animate={open ? { y: "-100%" } : { y: "0%" }}
+        transition={{ ...OPEN.lids, ease: [0.65, 0, 0.35, 1] }}
+        onAnimationComplete={() => open && onGone()}
+      />
+      <motion.div
+        className="splash__lid splash__lid--bottom"
+        animate={open ? { y: "100%" } : { y: "0%" }}
+        transition={{ ...OPEN.lids, ease: [0.65, 0, 0.35, 1] }}
+      />
+      <motion.div
+        className="splash__mark"
+        initial={{ opacity: 0, y: 8 }}
+        animate={open ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
+        transition={{ duration: open ? 0.35 : 0.6, ease: EASE_OUT }}
+      >
+        <span className="splash__word" role="status" aria-label="Loading Opticab">Opticab</span>
+        <span className="splash__bar"><span style={{ transform: `scaleX(${progress})` }} /></span>
+      </motion.div>
+    </div>
+  );
+}
+
+/** A few specks of pollen drifting up through the light. */
+const POLLEN = Array.from({ length: 14 }, (_, i) => ({
+  left: `${(i * 37 + 11) % 100}%`,
+  top: `${30 + ((i * 53) % 45)}%`,
+  size: 2 + ((i * 7) % 4),
+  dur: 14 + ((i * 5) % 10),
+  delay: -((i * 3.7) % 14),
+}));
+
 export default function App() {
   const reduced = useReducedMotion();
-  const ready = useAssetsReady(PRELOAD);
+  const { ready, progress } = useAssetsReady(PRELOAD);
+
+  // loading → open (lids part, garden wakes) → face (entrance plays) → entered (idle)
+  const [minHeld, setMinHeld] = useState(false);
+  const [splashGone, setSplashGone] = useState(false);
+  const [faceOn, setFaceOn] = useState(false);
   const [entered, setEntered] = useState(false);
   useEffect(() => {
-    if (!ready) return undefined;
+    const id = setTimeout(() => setMinHeld(true), (reduced ? 0 : OPEN.minSplash) * 1000);
+    return () => clearTimeout(id);
+  }, [reduced]);
+  const open = ready && minHeld;
+  useEffect(() => {
+    if (!open) return undefined;
+    const face = setTimeout(() => setFaceOn(true), (reduced ? 0 : OPEN.face) * 1000);
+    return () => clearTimeout(face);
+  }, [open, reduced]);
+  useEffect(() => {
+    if (!faceOn) return undefined;
     const id = setTimeout(() => setEntered(true), (reduced ? 0 : T.done) * 1000);
     return () => clearTimeout(id);
-  }, [ready, reduced]);
+  }, [faceOn, reduced]);
   const { selected, pick, cycling, cycleKey, setPaused } = useFrameCycle(FRAMES.length, entered);
+
+  // The photo and its foliage cut-out always move together, so their edges stay matched.
+  const wake = {
+    initial: reduced ? false : { scale: 1.1, y: "3%" },
+    animate: open ? { scale: 1, y: "0%" } : undefined,
+    transition: { ...OPEN.wake, ease: EASE_OUT },
+  };
 
   return (
     <>
-    <main className="hero">
-      {/* Background and foliage are there from the first frame; the foliage cut-out
-          sits above the face so the hair tucks into it. */}
+    {!reduced && !splashGone && <Splash progress={progress} open={open} onGone={() => setSplashGone(true)} />}
+    <main className="hero" data-awake={open}>
       <div className="hero__media" aria-hidden="true">
-        <img className="hero__photo" src="/assets/hero.webp" alt="" fetchpriority="high" />
+        <motion.div className="garden" {...wake}>
+          <div className="garden__drift">
+            <motion.img
+              className="hero__photo"
+              src="/assets/hero.webp"
+              alt=""
+              fetchpriority="high"
+              initial={reduced ? false : { filter: "blur(12px) brightness(0.8)" }}
+              animate={open ? { filter: "blur(0px) brightness(1)" } : undefined}
+              transition={{ duration: 1.8, delay: 0.15, ease: EASE_OUT }}
+            />
+          </div>
+        </motion.div>
+        <motion.div
+          className="hero__light"
+          initial={reduced ? false : { opacity: 0 }}
+          animate={open ? { opacity: 1 } : undefined}
+          transition={{ duration: 2.4, delay: 1, ease: "easeOut" }}
+        />
+        {!reduced && (
+          <div className="pollen">
+            {POLLEN.map((p, i) => (
+              <span key={i} style={{ left: p.left, top: p.top, width: p.size, height: p.size, animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s` }} />
+            ))}
+          </div>
+        )}
       </div>
 
-      {ready && (
+      {faceOn && (
         <>
           <Nav reduced={reduced} />
           <Headline reduced={reduced} />
           <Face frameId={FRAMES[selected].id} reduced={reduced} />
         </>
       )}
-      <img className="hero__front" src="/assets/hero-front.webp" alt="" aria-hidden="true" />
-      {ready && (
+      <motion.div className="garden garden--front" aria-hidden="true" {...wake}>
+        <div className="garden__drift">
+          <motion.img
+            className="hero__front"
+            src="/assets/hero-front.webp"
+            alt=""
+            initial={reduced ? false : { opacity: 0 }}
+            animate={open ? { opacity: 1 } : undefined}
+            transition={{ duration: 1.2, delay: 0.25, ease: "easeOut" }}
+          />
+        </div>
+      </motion.div>
+      {faceOn && (
         <>
           <Pitch reduced={reduced} />
           <Picker
@@ -216,7 +318,7 @@ export default function App() {
         </>
       )}
     </main>
-    {ready && <Sections />}
+    {faceOn && <Sections />}
     </>
   );
 }

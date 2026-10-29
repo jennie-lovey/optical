@@ -55,7 +55,100 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   object-fit: cover;
   object-position: 50% 100%;
   pointer-events: none;
-  z-index: 2;
+}
+
+/* ---------- The garden ---------- */
+
+/* Photo and foliage cut-out sit in matching wrappers that always move together. */
+.garden { position: absolute; inset: 0; will-change: transform; }
+.garden--front { z-index: 2; pointer-events: none; }
+.garden__drift {
+  position: absolute; inset: 0;
+  transform-origin: 50% 85%;
+  animation: garden-drift 18s ease-in-out 2.6s infinite alternate;
+}
+@keyframes garden-drift {
+  from { transform: scale(1) translateX(0); }
+  to   { transform: scale(1.035) translateX(-0.8%); }
+}
+
+/* A soft band of sunlight drifting across the sky. */
+.hero__light {
+  position: absolute; inset: -10% -20% 30%;
+  background: radial-gradient(40% 55% at 35% 30%, rgba(255, 238, 205, 0.55), transparent 70%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  animation: light-drift 22s ease-in-out infinite alternate;
+}
+@keyframes light-drift {
+  from { transform: translateX(-12%); }
+  to   { transform: translateX(14%); }
+}
+
+/* Pollen rising through the light. */
+.pollen { position: absolute; inset: 0; pointer-events: none; }
+.pollen span {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 246, 226, 0.85);
+  box-shadow: 0 0 6px rgba(255, 240, 210, 0.6);
+  opacity: 0;
+  animation-name: pollen;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes pollen {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  15%  { opacity: 0.8; }
+  85%  { opacity: 0.6; }
+  100% { transform: translate(24px, -160px); opacity: 0; }
+}
+
+/* ---------- Splash ---------- */
+
+.splash { position: fixed; inset: 0; z-index: 100; pointer-events: auto; }
+.splash[data-open="true"] { pointer-events: none; }
+.splash__lid {
+  position: absolute;
+  inset-inline: 0;
+  height: 50.5%;
+  background: var(--sage-1);
+  will-change: transform;
+}
+.splash__lid--top { top: 0; background: linear-gradient(180deg, #84987e, var(--sage-1)); }
+.splash__lid--bottom { bottom: 0; background: linear-gradient(0deg, #93a58c, var(--sage-1)); }
+.splash__mark {
+  position: absolute; inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 22px;
+}
+.splash__word {
+  font-family: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 800;
+  font-size: clamp(44px, 9vw, 132px);
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+.splash__bar {
+  position: relative;
+  width: clamp(120px, 14vw, 200px);
+  height: 1px;
+  background: rgba(244, 238, 226, 0.28);
+  overflow: hidden;
+}
+.splash__bar > span {
+  position: absolute; inset: 0;
+  background: var(--cream);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .garden__drift, .hero__light { animation: none; }
 }
 
 /* ---------- Nav ---------- */

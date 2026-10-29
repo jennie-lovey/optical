@@ -39,11 +39,23 @@ export const CYCLE = 4.5;
 
 // Everything the entrance needs, decoded before it starts.
 export const PRELOAD = [
+  "/assets/hero.webp",
+  "/assets/hero-front.webp",
   ...["sketch-details", "sketch-brows", "sketch-lids", "hair-sides", "eye-ball-left", "eye-ball-right", "eye-iris-left", "eye-iris-right", "eye-mask"].map(
     (f) => `/assets/face/${f}.webp`
   ),
   ...FRAMES.flatMap((f) => [frameSrc(f.id, "arms"), frameSrc(f.id, "front"), frameSrc(f.id, "thumb")]),
 ];
+
+// Opening, in seconds from the moment the splash starts to part.
+//   The eyelids open, the garden wakes (comes into focus, foliage fades in sharp), then
+//   the face entrance (T, above) begins.
+export const OPEN = {
+  minSplash: 1.2,  // never flash the splash; hold at least this long
+  lids: { delay: 0.25, duration: 1.05 },
+  wake: { duration: 2.2 },
+  face: 1.1,       // when the sketch starts drawing
+};
 
 export const EASE_OUT = [0.22, 1, 0.36, 1];
 export const EASE_IN_OUT = [0.65, 0, 0.35, 1];

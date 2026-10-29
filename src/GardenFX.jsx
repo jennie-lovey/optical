@@ -174,3 +174,53 @@ export function GardenBursts({ heroRef, reduced }) {
     </div>
   );
 }
+
+/**
+ * The cursor over the hero is a small sun: the light source for the focus lens and the
+ * glow. Mouse and trackpad only; over links and buttons it steps aside for the normal
+ * pointer, and it pulses on click.
+ */
+export function SunCursor({ heroRef }) {
+  const el = useRef(null);
+  useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return undefined;
+    const sun = el.current;
+    const hero = heroRef.current;
+    if (!sun || !hero) return undefined;
+    let raf = 0;
+    let pos = { x: -200, y: -200 };
+    const draw = () => { raf = 0; sun.style.transform = `translate(${pos.x}px, ${pos.y}px)`; };
+    const onMove = (e) => {
+      if (e.pointerType === "touch") return;
+      const r = hero.getBoundingClientRect();
+      const inside = e.clientY >= r.top && e.clientY <= r.bottom && e.clientX >= r.left && e.clientX <= r.right;
+      const overControl = !!e.target.closest?.(INTERACTIVE);
+      sun.dataset.on = String(inside && !overControl);
+      pos = { x: e.clientX, y: e.clientY };
+      if (!raf) raf = requestAnimationFrame(draw);
+    };
+    const onDown = () => {
+      sun.dataset.press = "true";
+      setTimeout(() => { sun.dataset.press = "false"; }, 180);
+    };
+    const onLeave = () => { sun.dataset.on = "false"; };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    hero.addEventListener("pointerdown", onDown);
+    document.documentElement.addEventListener("pointerleave", onLeave);
+    hero.classList.add("has-sun");
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onMove);
+      hero.removeEventListener("pointerdown", onDown);
+      document.documentElement.removeEventListener("pointerleave", onLeave);
+      hero.classList.remove("has-sun");
+    };
+  }, [heroRef]);
+  return (
+    <div className="sun" ref={el} data-on="false" aria-hidden="true">
+      <span className="sun__halo" />
+      <span className="sun__rays" />
+      <span className="sun__core" />
+    </div>
+  );
+}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import Butterfly from "./Butterfly.jsx";
 import Face from "./Face.jsx";
-import { GardenBursts, useGardenLook } from "./GardenFX.jsx";
+import { GardenBursts, SunCursor, useGardenLook } from "./GardenFX.jsx";
 import Sections from "./sections/Sections.jsx";
 import { CYCLE, EASE_OUT, FRAMES, OPEN, PRELOAD, T } from "./data.js";
 
@@ -195,6 +195,7 @@ export default function App() {
     <>
     {!reduced && !splashGone && <Splash progress={progress} open={open} onGone={() => setSplashGone(true)} />}
     {ready && <Butterfly open={open} reduced={reduced} heroRef={heroRef} />}
+    <SunCursor heroRef={heroRef} />
     <main className="hero" data-awake={open} ref={heroRef}>
       <div className="hero__media" aria-hidden="true">
         <motion.div className="garden" {...wake}>

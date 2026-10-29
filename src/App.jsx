@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import Butterfly from "./Butterfly.jsx";
 import Face from "./Face.jsx";
+import { GardenBursts, useGardenLook } from "./GardenFX.jsx";
 import Sections from "./sections/Sections.jsx";
 import { CYCLE, EASE_OUT, FRAMES, OPEN, PRELOAD, T, frameSrc } from "./data.js";
 
@@ -232,6 +233,7 @@ export default function App() {
   const reduced = useReducedMotion();
   const { ready, progress } = useAssetsReady(PRELOAD);
   const heroRef = useRef(null);
+  const look = useGardenLook(heroRef, reduced);
 
   // loading → open (lids part, garden wakes) → face (entrance plays) → entered (idle)
   const [minHeld, setMinHeld] = useState(false);
@@ -282,6 +284,7 @@ export default function App() {
       <div className="hero__media" aria-hidden="true">
         <motion.div className="garden" {...wake}>
           <div className="garden__drift">
+            <motion.div className="garden__look" style={{ x: look.panX, y: look.panY }}>
             <motion.img
               className="hero__photo"
               src="/assets/hero.webp"
@@ -291,8 +294,10 @@ export default function App() {
               animate={open ? { filter: "blur(0px) brightness(1)" } : undefined}
               transition={{ duration: 1.8, delay: 0.15, ease: EASE_OUT }}
             />
+            </motion.div>
           </div>
         </motion.div>
+        <motion.div className="hero__glow" data-active={look.active} style={{ "--gx": look.glowX, "--gy": look.glowY }} />
         <motion.div
           className="hero__light"
           initial={reduced ? false : { opacity: 0 }}
@@ -324,6 +329,7 @@ export default function App() {
       )}
       <motion.div className="garden garden--front" aria-hidden="true" {...wake}>
         <div className="garden__drift">
+          <motion.div className="garden__look" style={{ x: look.panX, y: look.panY }}>
           <motion.img
             className="hero__front"
             src="/assets/hero-front.webp"
@@ -332,8 +338,10 @@ export default function App() {
             animate={open ? { opacity: 1 } : undefined}
             transition={{ duration: 1.2, delay: 0.25, ease: "easeOut" }}
           />
+          </motion.div>
         </div>
       </motion.div>
+      <GardenBursts heroRef={heroRef} reduced={reduced} />
       {faceOn && (
         <>
           <Pitch reduced={reduced} />

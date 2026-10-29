@@ -32,11 +32,16 @@ const PERCHES = [
 
 const rand = (a, b) => a + Math.random() * (b - a);
 
-/** Hero photo pixels → page pixels, matching object-fit: cover with position 50% 100%. */
+/**
+ * Hero photo pixels → page pixels, matching object-fit: cover with position 50% 100%. The
+ * photo is drawn 2.5% past each edge (.garden__look) so it can pan; account for that too.
+ */
+const BLEED = 0.025;
 function toPage(p, w, h) {
-  const s = Math.max(w / PHOTO.w, h / PHOTO.h);
-  const ox = (w - PHOTO.w * s) * 0.5;
-  const oy = h - PHOTO.h * s;
+  const bw = w * (1 + 2 * BLEED), bh = h * (1 + 2 * BLEED);
+  const s = Math.max(bw / PHOTO.w, bh / PHOTO.h);
+  const ox = (bw - PHOTO.w * s) * 0.5 - w * BLEED;
+  const oy = bh - PHOTO.h * s - h * BLEED;
   return { x: ox + p.x * s, y: oy + p.y * s };
 }
 

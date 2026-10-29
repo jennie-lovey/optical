@@ -81,14 +81,13 @@ function Picker({ selected, onSelect, reduced, cycling, cycleKey, onPause }) {
   return (
     <motion.section
       className="picker"
-      aria-label="Explore frames"
+      aria-label="Choose a frame"
       onPointerEnter={() => onPause(true)}
       onPointerLeave={() => onPause(false)}
       onFocus={() => onPause(true)}
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && onPause(false)}
       {...fadeIn(reduced, T.picker)}
     >
-      <a className="picker__link" href="#">Explore frames</a>
       <div className="picker__frames" role="radiogroup" aria-label="Frame style" onKeyDown={frames.onKeyDown}>
         {FRAMES.map((f, i) => (
           <button

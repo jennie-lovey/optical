@@ -499,7 +499,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   align-items: center;
   gap: clamp(8px, 0.55vw, 10px);
   padding: clamp(8px, 0.6vw, 11px);
-  padding-left: clamp(20px, 1.9vw, 32px);
   padding-right: clamp(16px, 1.4vw, 24px);
   border-radius: clamp(20px, 1.6vw, 28px);
   background: var(--glass);
@@ -509,13 +508,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 20px 40px -20px rgba(30, 40, 25, 0.35);
 }
 
-.picker__link {
-  flex: none;
-  margin-right: clamp(16px, 2.4vw, 40px);
-  font-size: clamp(15px, 1.08vw, 18px);
-  padding-bottom: 3px;
-  border-bottom: 1px solid currentColor;
-}
 
 .picker__frames {
   display: flex;
@@ -661,7 +653,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     padding: 12px;
     row-gap: 12px;
   }
-  .picker__link { order: 1; margin: 0 auto 0 6px; font-size: 14px; }
   .picker__swatches { order: 2; gap: 6px; }
   .swatch { width: 34px; }
   .picker__divider { display: none; }

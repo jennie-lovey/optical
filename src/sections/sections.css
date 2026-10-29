@@ -139,6 +139,7 @@
 .essentials__controls { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
 .essentials__controls .link-underline { margin-left: auto; }
 
+.essentials__viewport { overflow: hidden; }
 .essentials__track {
   list-style: none;
   margin: 0;
@@ -147,24 +148,19 @@
   grid-auto-flow: column;
   grid-auto-columns: clamp(250px, 26vw, 380px);
   gap: 16px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: calc((100vw - var(--wrap)) / 2);
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
+  width: max-content;
+  /* Sideways is ours (drag); up and down still scroll the page. */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
 }
-.essentials__track::-webkit-scrollbar { display: none; }
-/* On touch, a hard snap pulls short swipes back to the same card: let it glide freely and
-   settle near a card instead. The arrows still step card by card. */
-@media (pointer: coarse) {
-  .essentials__track { scroll-snap-type: x proximity; }
-}
+.essentials__track:active { cursor: grabbing; }
+.sq-btn:disabled { opacity: 0.3; pointer-events: none; }
 /* A long press on a card shouldn't pick the photo up and stall the swipe. */
 .product__media { -webkit-touch-callout: none; }
 .product__media img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
-.product { scroll-snap-align: start; }
+/* Links are draggable by default; picking one up would cancel the swipe. */
+.essentials__track a { -webkit-user-drag: none; }
 .product__media {
   position: relative;
   display: grid;

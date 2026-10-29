@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { animate, motion, useMotionValue } from "framer-motion";
 import { Arrow, Placeholder, Reveal, RevealImage, RevealText, Rule, SectionLabel } from "./shared.jsx";
 
 // Product photos from public/assets/products (tools/build-product-shots.py).
@@ -34,7 +35,7 @@ function Product({ p }) {
   };
   return (
     <>
-      <a href="#" className="product__media">
+      <a href="#" className="product__media" draggable="false">
         {p.tag && <span className="chip">{p.tag}</span>}
         {p.colours.map((c, i) => (
           <img
@@ -51,7 +52,7 @@ function Product({ p }) {
       <div className="product__meta">
         <span className="mono product__kind">{p.kind}</span>
         <div className="product__row">
-          <a href="#" className="product__name">{p.name} <span>· {colour.name}</span></a>
+          <a href="#" className="product__name" draggable="false">{p.name} <span>· {colour.name}</span></a>
           <span className="product__price">${p.price}</span>
         </div>
         <div className="product__swatches" role="radiogroup" aria-label={`${p.name} colours`} onKeyDown={onKeyDown}>
@@ -76,13 +77,62 @@ function Product({ p }) {
   );
 }
 
+/**
+ * The frame carousel. Cards follow the finger (or mouse) directly, a flick carries on by
+ * its speed, and on release it springs quickly to the nearest card. Vertical swipes still
+ * scroll the page. Built on drag rather than native scrolling, whose snapping on phones
+ * pulled short swipes back to the first card.
+ */
+const SNAP = { type: "spring", stiffness: 520, damping: 46, mass: 0.7 };
+
 function Essentials() {
+  const viewport = useRef(null);
   const track = useRef(null);
-  const scroll = (dir) => {
-    const el = track.current;
+  const x = useMotionValue(0);
+  const [index, setIndex] = useState(0);
+  const [bounds, setBounds] = useState({ max: 0, step: 1, last: 0 });
+  const dragged = useRef(false);
+
+  const measure = useCallback(() => {
+    const vp = viewport.current, el = track.current;
     const card = el?.querySelector(".product");
-    if (el && card) el.scrollBy({ left: dir * (card.offsetWidth + parseFloat(getComputedStyle(el).columnGap)), behavior: "smooth" });
+    if (!vp || !el || !card) return null;
+    const step = card.offsetWidth + parseFloat(getComputedStyle(el).columnGap);
+    const max = Math.max(0, el.scrollWidth - vp.clientWidth);
+    const b = { max, step, last: Math.ceil(max / step - 0.01) };
+    setBounds(b);
+    return b;
+  }, []);
+
+  const goTo = useCallback((i, velocity = 0) => {
+    const b = measure();
+    if (!b) return;
+    const next = Math.max(0, Math.min(b.last, i));
+    setIndex(next);
+    animate(x, -Math.min(next * b.step, b.max), { ...SNAP, velocity });
+  }, [measure, x]);
+
+  // Keep the current card in place when the window changes size.
+  const indexRef = useRef(index);
+  indexRef.current = index;
+  useEffect(() => {
+    measure();
+    const onResize = () => goTo(indexRef.current);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [measure, goTo]);
+
+  // Each swipe moves a card, a hard flick at most two, so it never runs away to the end.
+  const startIndex = useRef(0);
+  const onDragEnd = (_, info) => {
+    const from = startIndex.current;
+    const v = info.velocity.x;
+    let to = Math.round(-x.get() / bounds.step);
+    if (Math.abs(v) > 250 && to === from) to = from - Math.sign(v);
+    if (Math.abs(v) > 1800) to = from - 2 * Math.sign(v);
+    goTo(Math.max(from - 2, Math.min(from + 2, to)), v);
   };
+
   return (
     <section className="sec essentials" aria-labelledby="essentials-title">
       <div className="intro wrap">
@@ -96,17 +146,32 @@ function Essentials() {
 
       <div className="essentials__rail">
         <div className="essentials__controls wrap">
-          <button className="sq-btn" type="button" aria-label="Previous frames" onClick={() => scroll(-1)}><Arrow dir="left" /></button>
-          <button className="sq-btn" type="button" aria-label="Next frames" onClick={() => scroll(1)}><Arrow dir="right" /></button>
+          <button className="sq-btn" type="button" aria-label="Previous frames" disabled={index === 0} onClick={() => goTo(index - 1)}><Arrow dir="left" /></button>
+          <button className="sq-btn" type="button" aria-label="Next frames" disabled={index >= bounds.last} onClick={() => goTo(index + 1)}><Arrow dir="right" /></button>
           <a className="link-underline" href="#">See every frame</a>
         </div>
-        <ul className="essentials__track" ref={track}>
-          {PRODUCTS.map((p, i) => (
-            <Reveal as="li" className="product" key={p.id} delay={i * 0.06}>
-              <Product p={p} />
-            </Reveal>
-          ))}
-        </ul>
+        <div className="essentials__viewport" ref={viewport}>
+          <motion.ul
+            className="essentials__track"
+            ref={track}
+            style={{ x }}
+            drag="x"
+            dragConstraints={{ left: -bounds.max, right: 0 }}
+            dragElastic={0.14}
+            dragMomentum={false}
+            onPointerDown={() => { dragged.current = false; }}
+            onDragStart={() => { dragged.current = true; startIndex.current = index; }}
+            onDragEnd={onDragEnd}
+            // A drag that ends over a card shouldn't open it.
+            onClickCapture={(e) => { if (dragged.current) { e.preventDefault(); e.stopPropagation(); } }}
+          >
+            {PRODUCTS.map((p, i) => (
+              <Reveal as="li" className="product" key={p.id} delay={i * 0.06}>
+                <Product p={p} />
+              </Reveal>
+            ))}
+          </motion.ul>
+        </div>
       </div>
     </section>
   );

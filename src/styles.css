@@ -453,7 +453,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .pitch {
   position: absolute;
   right: 3vw;
-  top: 54%;
+  bottom: 7%;
   z-index: 3;
   display: flex;
   align-items: center;

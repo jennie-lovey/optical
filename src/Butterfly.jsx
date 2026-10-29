@@ -23,11 +23,10 @@ const FLOWERS = [
 ];
 
 // Where flowers run short (phones show only the middle of the photo, and the tagline panel
-// covers its flowers), it can also perch on the top edge of the frosted panels.
+// covers its flowers), it can also perch on the top edge of the frosted tagline panel.
 const PERCHES = [
   { sel: ".pitch", fx: 0.22 },
   { sel: ".pitch", fx: 0.62 },
-  { sel: ".picker", fx: 0.5 },
 ];
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -75,12 +74,12 @@ export default function Butterfly({ open, reduced, heroRef }) {
       if (!r || !hero) return { x: -999, y: -999 };
       return { x: r.left - hero.left + r.width * perch.fx, y: r.top - hero.top + 2 };
     };
-    // Flowers on screen and clear of the face, the tagline panel, the picker and the nav.
+    // Flowers on screen and clear of the face, the tagline panel and the nav.
     const usable = () => {
       const { w, h } = size();
       const hero = heroRef.current?.getBoundingClientRect();
       // The face's hair spills well past the glasses box, so the face gets a wider margin.
-      const keepOut = [[".rig", 0.32], [".pitch", 0], [".picker", 0], [".nav", 0]]
+      const keepOut = [[".rig", 0.32], [".pitch", 0], [".nav", 0]]
         .map(([sel, spill]) => {
           const r = heroRef.current?.querySelector(sel)?.getBoundingClientRect();
           if (!r) return null;

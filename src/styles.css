@@ -449,7 +449,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 /* ---------- Pitch ---------- */
 
-/* Frosted like the picker so the copy reads over hair and flowers. */
+/* Frosted so the copy reads over hair and flowers. */
 .pitch {
   position: absolute;
   right: 3vw;
@@ -487,133 +487,17 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .round-btn:hover { background: var(--cream); color: var(--cream-ink); }
 .round-btn:hover svg { transform: translateX(3px); }
 
-/* ---------- Frame picker ---------- */
-
-.picker {
-  position: absolute;
-  left: 8.2vw;
-  right: 7.8vw;
-  bottom: 5.3%;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: clamp(8px, 0.55vw, 10px);
-  padding: clamp(8px, 0.6vw, 11px);
-  padding-right: clamp(16px, 1.4vw, 24px);
-  border-radius: clamp(20px, 1.6vw, 28px);
-  background: var(--glass);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(22px) saturate(1.2);
-  -webkit-backdrop-filter: blur(22px) saturate(1.2);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 20px 40px -20px rgba(30, 40, 25, 0.35);
-}
-
-
-.picker__frames {
-  display: flex;
-  gap: clamp(6px, 0.5vw, 9px);
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.frame {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 250px;
-  height: clamp(64px, 4.8vw, 82px);
-  padding: 0;
-  overflow: hidden;
-  border-radius: clamp(14px, 1vw, 18px);
-  background: rgba(240, 236, 224, 0.34);
-  border: 1px solid transparent;
-  transition: background 0.3s, border-color 0.3s, transform 0.3s var(--ease-out);
-}
-/* Product shots are on white paper: multiply drops the paper into the card
-   colour and keeps clear acetate reading as glass. */
-.frame img {
-  display: block;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: 30% 50%;
-  mix-blend-mode: multiply;
-  filter: saturate(0.9) contrast(1.05);
-  opacity: 0.72;
-  transition: transform 0.5s var(--ease-out), opacity 0.3s;
-  user-select: none;
-}
-.frame:hover { background: rgba(244, 240, 228, 0.55); }
-.frame:hover img { transform: scale(1.06); opacity: 1; }
-.frame[aria-checked="true"] {
-  background: rgba(250, 247, 239, 0.92);
-  border-color: #fff;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55), 0 8px 18px -10px rgba(20, 30, 15, 0.5);
-}
-.frame[aria-checked="true"] img { opacity: 1; }
-.frame { position: relative; }
-/* Time left before the frames move on by themselves. */
-.frame__timer {
-  position: absolute; left: 14%; right: 14%; bottom: 7px;
-  height: 2px;
-  border-radius: 2px;
-  background: rgba(31, 35, 29, 0.45);
-  transform-origin: left;
-}
-.frame:active { transform: scale(0.97); }
-
-.picker__divider {
-  flex: none;
-  width: 1px;
-  height: clamp(44px, 3.6vw, 60px);
-  margin: 0 clamp(14px, 1.6vw, 28px) 0 clamp(18px, 2vw, 34px);
-  background: rgba(255, 255, 255, 0.55);
-}
-
-.picker__swatches {
-  display: flex;
-  gap: clamp(10px, 1.2vw, 20px);
-  flex: none;
-}
-
-.swatch {
-  position: relative;
-  width: clamp(42px, 2.75vw, 46px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  display: grid; place-items: center;
-  background: rgba(255, 255, 255, 0.16);
-  transition: transform 0.25s var(--ease-out);
-}
-.swatch::before {
-  content: "";
-  width: 72%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) inset;
-}
-.swatch::after {
-  content: "";
-  position: absolute; inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  opacity: 0;
-  transform: scale(0.85);
-  transition: opacity 0.25s, transform 0.3s var(--ease-out);
-}
-.swatch:hover { transform: scale(1.06); }
-.swatch[aria-checked="true"]::after { opacity: 1; transform: none; }
-
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1100px) {
   .nav__links { display: none; }
   .nav { grid-template-columns: 1fr auto; }
-  .pitch { left: auto; right: var(--gutter); top: auto; bottom: calc(5.3% + 120px); }
+  .pitch { left: auto; right: var(--gutter); top: auto; bottom: 6%; }
 }
 
 /* Stacked layout for phones and portrait / near-square screens.
    --u is a "column unit": 1vw on phones, capped by height on wider screens
-   so the stack always fits between the nav and the picker. */
+   so the stack always fits between the nav and the tagline. */
 @media (max-width: 760px), (max-aspect-ratio: 5/4) {
   .hero { --u: min(1vw, 0.462svh); min-height: max(100svh, 640px); }
   .nav { padding-top: 18px; }
@@ -634,7 +518,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
   .rig { top: calc(99 * var(--u)); width: calc(76 * var(--u)); translate: -50% 0; }
 
-  /* Portrait crops make the foliage tall; darken it under the copy and picker. */
+  /* Portrait crops make the foliage tall; darken it under the tagline. */
   .hero::after {
     content: "";
     position: absolute; inset: auto 0 0 0;
@@ -644,26 +528,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     background: linear-gradient(180deg, transparent, rgba(28, 38, 24, 0.35) 40%, rgba(28, 38, 24, 0.6));
   }
 
-  .pitch { left: 16px; right: 16px; top: auto; bottom: 168px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .pitch { left: 16px; right: 16px; top: auto; bottom: calc(20px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .pitch p { margin: 0; white-space: normal; font-size: 15px; }
 
-  .picker {
-    left: 12px; right: 12px; bottom: 12px;
-    flex-wrap: wrap;
-    padding: 12px;
-    row-gap: 12px;
-  }
-  .picker__swatches { order: 2; gap: 6px; }
-  .swatch { width: 34px; }
-  .picker__divider { display: none; }
-  .picker__frames {
-    order: 3; flex-basis: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-  }
-  .picker__frames::-webkit-scrollbar { display: none; }
-  .frame { flex: 0 0 31%; height: 60px; scroll-snap-align: start; }
 }
 
 /* Phones and portrait tablets: keep SEE DIFFERENTLY on one line, as on desktop, across
@@ -686,9 +553,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .rig { top: calc(var(--hl-top) + 11.8vw); width: 70vw; translate: -50% 0; }
 }
 /* Phones: a larger face under the one-line headline, the group centred above the
-   tagline panel and picker at the bottom. */
+   tagline panel at the bottom. */
 @media (max-width: 599px) {
-  .hero { --hl-top: max(96px, calc(50svh - 200px)); }
+  .hero { --hl-top: max(96px, calc(50svh - 140px)); }
   .rig { width: 88vw; }
 }
 

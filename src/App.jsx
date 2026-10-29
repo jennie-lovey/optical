@@ -4,7 +4,7 @@ import Butterfly from "./Butterfly.jsx";
 import Face from "./Face.jsx";
 import { GardenBursts, useGardenLook } from "./GardenFX.jsx";
 import Sections from "./sections/Sections.jsx";
-import { CYCLE, EASE_OUT, FRAMES, OPEN, PRELOAD, T, frameSrc } from "./data.js";
+import { CYCLE, EASE_OUT, FRAMES, OPEN, PRELOAD, T } from "./data.js";
 
 const fadeIn = (reduced, timing, y = 12) => ({
   initial: reduced ? false : { opacity: 0, y },
@@ -61,82 +61,6 @@ function Pitch({ reduced }) {
   );
 }
 
-/** Radio group with arrow-key movement; selection follows focus. */
-function useRadioKeys(count, current, onSelect) {
-  const refs = useRef([]);
-  const onKeyDown = (e) => {
-    const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-    if (!dir) return;
-    e.preventDefault();
-    const next = (current + dir + count) % count;
-    refs.current[next]?.focus();
-    onSelect(next);
-  };
-  return { refs, onKeyDown };
-}
-
-function Picker({ selected, onSelect, reduced, cycling, cycleKey, onPause }) {
-  const frames = useRadioKeys(FRAMES.length, selected, onSelect);
-  const swatches = useRadioKeys(FRAMES.length, selected, onSelect);
-  return (
-    <motion.section
-      className="picker"
-      aria-label="Choose a frame"
-      onPointerEnter={() => onPause(true)}
-      onPointerLeave={() => onPause(false)}
-      onFocus={() => onPause(true)}
-      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && onPause(false)}
-      {...fadeIn(reduced, T.picker)}
-    >
-      <div className="picker__frames" role="radiogroup" aria-label="Frame style" onKeyDown={frames.onKeyDown}>
-        {FRAMES.map((f, i) => (
-          <button
-            key={f.id}
-            ref={(el) => (frames.refs.current[i] = el)}
-            type="button"
-            role="radio"
-            className="frame"
-            aria-checked={i === selected}
-            tabIndex={i === selected ? 0 : -1}
-            title={f.name}
-            onClick={() => onSelect(i)}
-          >
-            <img src={frameSrc(f.id, "thumb")} alt={`${f.name} in ${f.colour}`} draggable="false" />
-            {cycling && i === selected && (
-              <motion.span
-                key={cycleKey}
-                className="frame__timer"
-                aria-hidden="true"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: CYCLE, ease: "linear" }}
-              />
-            )}
-          </button>
-        ))}
-      </div>
-      <span className="picker__divider" aria-hidden="true" />
-      <div className="picker__swatches" role="radiogroup" aria-label="Frame colour" onKeyDown={swatches.onKeyDown}>
-        {FRAMES.map((f, i) => (
-          <button
-            key={f.id}
-            ref={(el) => (swatches.refs.current[i] = el)}
-            type="button"
-            role="radio"
-            className="swatch"
-            aria-checked={i === selected}
-            aria-label={f.colour}
-            tabIndex={i === selected ? 0 : -1}
-            title={f.colour}
-            style={{ "--c": f.hex }}
-            onClick={() => onSelect(i)}
-          />
-        ))}
-      </div>
-    </motion.section>
-  );
-}
-
 /** Waits until every layer is decoded so the entrance plays from its first frame. */
 function useAssetsReady(urls) {
   const [ready, setReady] = useState(false);
@@ -159,25 +83,15 @@ function useAssetsReady(urls) {
   return { ready, progress };
 }
 
-/** Steps through the frames on its own once the entrance is done; picking one restarts the wait. */
+/** Steps through the frames on its own once the entrance is done. */
 function useFrameCycle(count, started) {
   const [selected, setSelected] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [cycleKey, setCycleKey] = useState(0);
-  const cycling = started && !paused;
   useEffect(() => {
-    if (!cycling) return undefined;
-    const id = setTimeout(() => {
-      setSelected((i) => (i + 1) % count);
-      setCycleKey((k) => k + 1);
-    }, CYCLE * 1000);
-    return () => clearTimeout(id);
-  }, [cycling, cycleKey, count]);
-  const pick = (i) => {
-    setSelected(i);
-    setCycleKey((k) => k + 1);
-  };
-  return { selected, pick, cycling, cycleKey, setPaused };
+    if (!started) return undefined;
+    const id = setInterval(() => setSelected((i) => (i + 1) % count), CYCLE * 1000);
+    return () => clearInterval(id);
+  }, [started, count]);
+  return selected;
 }
 
 /**
@@ -254,7 +168,7 @@ export default function App() {
     const id = setTimeout(() => setEntered(true), (reduced ? 0 : T.done) * 1000);
     return () => clearTimeout(id);
   }, [faceOn, reduced]);
-  const { selected, pick, cycling, cycleKey, setPaused } = useFrameCycle(FRAMES.length, entered);
+  const selected = useFrameCycle(FRAMES.length, entered);
 
   // Blossom: the garden grows up out of the horizon along a soft edge. --grow is how far
   // up (in % of the hero, from the bottom) the moss and flowers have risen.
@@ -344,14 +258,7 @@ export default function App() {
       {faceOn && (
         <>
           <Pitch reduced={reduced} />
-          <Picker
-            selected={selected}
-            onSelect={pick}
-            reduced={reduced}
-            cycling={cycling}
-            cycleKey={cycleKey}
-            onPause={setPaused}
-          />
+
         </>
       )}
     </main>

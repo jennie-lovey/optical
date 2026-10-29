@@ -151,8 +151,19 @@
   scroll-snap-type: x mandatory;
   scroll-padding-inline: calc((100vw - var(--wrap)) / 2);
   scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 .essentials__track::-webkit-scrollbar { display: none; }
+/* On touch, a hard snap pulls short swipes back to the same card: let it glide freely and
+   settle near a card instead. The arrows still step card by card. */
+@media (pointer: coarse) {
+  .essentials__track { scroll-snap-type: x proximity; }
+}
+/* A long press on a card shouldn't pick the photo up and stall the swipe. */
+.product__media { -webkit-touch-callout: none; }
+.product__media img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
 .product { scroll-snap-align: start; }
 .product__media {
   position: relative;
@@ -643,7 +654,7 @@
 }
 
 @media (max-width: 560px) {
-  .essentials__track { grid-auto-columns: 78vw; }
+  .essentials__track { grid-auto-columns: 72vw; gap: 12px; }
   .story { grid-template-columns: 96px 1fr; gap: 16px; }
   .promises__grid { grid-template-columns: 1fr; }
 }

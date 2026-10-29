@@ -81,7 +81,7 @@ function Essentials() {
   const scroll = (dir) => {
     const el = track.current;
     const card = el?.querySelector(".product");
-    if (el && card) el.scrollBy({ left: dir * (card.offsetWidth + 16), behavior: "smooth" });
+    if (el && card) el.scrollBy({ left: dir * (card.offsetWidth + parseFloat(getComputedStyle(el).columnGap)), behavior: "smooth" });
   };
   return (
     <section className="sec essentials" aria-labelledby="essentials-title">

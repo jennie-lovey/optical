@@ -41,6 +41,7 @@ export const CYCLE = 4.5;
 export const PRELOAD = [
   "/assets/hero.webp",
   "/assets/hero-front.webp",
+  "/assets/butterfly.webp",
   ...["sketch-details", "sketch-brows", "sketch-lids", "hair-sides", "eye-ball-left", "eye-ball-right", "eye-iris-left", "eye-iris-right", "eye-mask"].map(
     (f) => `/assets/face/${f}.webp`
   ),
@@ -51,7 +52,7 @@ export const PRELOAD = [
 //   The eyelids open, the garden wakes (comes into focus, foliage fades in sharp), then
 //   the face entrance (T, above) begins.
 export const OPEN = {
-  minSplash: 1.2,  // never flash the splash; hold at least this long
+  minSplash: 1.9,  // hold long enough for the butterfly to cross before the lids part
   lids: { delay: 0.25, duration: 1.05 },
   wake: { duration: 2.2 },
   face: 1.1,       // when the sketch starts drawing

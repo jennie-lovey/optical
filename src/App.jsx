@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import Butterfly from "./Butterfly.jsx";
 import Face from "./Face.jsx";
 import Sections from "./sections/Sections.jsx";
 import { CYCLE, EASE_OUT, FRAMES, OPEN, PRELOAD, T, frameSrc } from "./data.js";
@@ -222,6 +223,7 @@ const POLLEN = Array.from({ length: 14 }, (_, i) => ({
 export default function App() {
   const reduced = useReducedMotion();
   const { ready, progress } = useAssetsReady(PRELOAD);
+  const heroRef = useRef(null);
 
   // loading → open (lids part, garden wakes) → face (entrance plays) → entered (idle)
   const [minHeld, setMinHeld] = useState(false);
@@ -255,7 +257,8 @@ export default function App() {
   return (
     <>
     {!reduced && !splashGone && <Splash progress={progress} open={open} onGone={() => setSplashGone(true)} />}
-    <main className="hero" data-awake={open}>
+    {ready && <Butterfly open={open} reduced={reduced} heroRef={heroRef} />}
+    <main className="hero" data-awake={open} ref={heroRef}>
       <div className="hero__media" aria-hidden="true">
         <motion.div className="garden" {...wake}>
           <div className="garden__drift">
